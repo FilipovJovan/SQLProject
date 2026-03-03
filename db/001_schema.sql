@@ -12,11 +12,12 @@ CREATE TABLE tenants
 
 CREATE TABLE users
 (
-    id         UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
-    tenant_id  UUID        NOT NULL,
-    email      TEXT        NOT NULL,
-    role       user_role   NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+    tenant_id     UUID        NOT NULL,
+    email         TEXT        NOT NULL,
+    role          user_role   NOT NULL,
+    password_hash TEXT        NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_users_tenant
         FOREIGN KEY (tenant_id)
@@ -37,7 +38,10 @@ CREATE TABLE projects
     CONSTRAINT fk_projects_tenant
         FOREIGN KEY (tenant_id)
             REFERENCES tenants (id)
-            ON DELETE CASCADE
+            ON DELETE CASCADE,
+
+    CONSTRAINT unique_project_name_per_tenant
+        UNIQUE (tenant_id, name)
 );
 
 CREATE TABLE items
