@@ -32,7 +32,7 @@ export async function bulkInsertItems(client, projectId, items) {
     )
 }
 
-export async function getItemsByProject(client, tenantId, projectId, options = {}) {
+export async function getItemsByProject(client, projectId, options = {}) {
     const {status, limit, offset} = options;
 
     const safeLimit = Math.min(Math.max(Number(limit), 1), 100);
@@ -43,32 +43,30 @@ export async function getItemsByProject(client, tenantId, projectId, options = {
             SELECT i.id, i.project_id, i.title, i.status, i.created_at
             FROM items i
                      JOIN projects p ON p.id = i.project_id
-            WHERE p.tenant_id = $1
-              AND p.id = $2
-              AND ($3::item_status IS NULL OR i.status = $3::item_status)
+            WHERE p.id = $1
+              AND ($2::item_status IS NULL OR i.status = $2::item_status)
             ORDER BY i.created_at
-                LIMIT $4
-            OFFSET $5
+                LIMIT $3
+            OFFSET $4
         `,
-        [tenantId, projectId, status || null, safeLimit, safeOffset]
+        [projectId, status || null, safeLimit, safeOffset]
     );
 }
 
 
-export async function updateItemStatus(client, tenantId, itemId, status) {
+export async function updateItemStatus(client, itemId, status) {
     return client.query(
         `
             UPDATE items i
-            SET status = $3 FROM projects p
+            SET status = $2 FROM projects p
             WHERE i.project_id = p.id
-              AND p.tenant_id = $1
-              AND i.id = $2
+              AND i.id = $1
                 RETURNING i.id
                 , i.project_id
                 , i.title
                 , i.status
                 , i.created_at
         `,
-        [tenantId, itemId, status]
+        [itemId, status]
     )
 }

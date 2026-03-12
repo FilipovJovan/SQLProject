@@ -39,22 +39,16 @@ export const bulkCreateItems = async (client, projectId, items) => {
     return result.rows;
 }
 
-export const getItemsByProjectService = async (client, tenantId, projectId, options = {}) => {
-    if (!tenantId) {
-        throw new BadRequestError("Tenant ID is required");
-    }
+export const getItemsByProjectService = async (client, projectId, options = {}) => {
     if (!projectId) {
         throw new BadRequestError("Project ID is required");
     }
 
-    const result = await itemRepo.getItemsByProject(client, tenantId, projectId, options);
+    const result = await itemRepo.getItemsByProject(client, projectId, options);
     return result.rows;
 };
 
-export const updateItemStatus = async (client, tenantId, itemId, status) => {
-    if (!tenantId) {
-        throw new BadRequestError("Tenant ID is required");
-    }
+export const updateItemStatus = async (client, itemId, status) => {
     if (!itemId) {
         throw new BadRequestError("Item ID is required");
     }
@@ -62,7 +56,7 @@ export const updateItemStatus = async (client, tenantId, itemId, status) => {
         throw new BadRequestError("Status is required");
     }
 
-    const result = await itemRepo.updateItemStatus(client, tenantId, itemId, status);
+    const result = await itemRepo.updateItemStatus(client, itemId, status);
 
     if (result.rows.length === 0) {
         throw new NotFoundError("Item not found or does not belong to this tenant");

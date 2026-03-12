@@ -1,5 +1,6 @@
 import pool from '../db/pool.js';
 import * as itemService from '../services/item.service.js';
+import {withTenant} from "../db/withTenant.js";
 
 export const insertItemHandler = async (req, res) => {
     const {title} = req.body;
@@ -113,42 +114,36 @@ export const bulkInsertItemsHandler = async (req, res, next) => {
 export const getItemsByProjectHandler = async (req, res, next) => {
     const projectIdObject = req.params;
     const projectId = projectIdObject.projectId;
-    const tenantId = req.context.tenantId;
     const {status, limit, offset} = req.query;
 
-    if (!projectId || !tenantId) {
+    if (!projectId) {
         return res
             .status(400)
-            .send({error: "Project ID and Tenant ID are required"});
+            .send({error: "Project ID is required"});
     }
 
-    const client = await pool.connect();
-
     try {
-        const items = await itemService.getItemsByProjectService(client, tenantId, projectId, {status, limit, offset});
-        return res.status(201).json(items);
+        const items = await withTenant(req, async (client) => {
+            return itemService.getItemsByProjectService(client, projectId, {status, limit, offset});
+        });
+        return res.status(200).json(items);
     } catch (err) {
         next(err);
-    } finally {
-        client.release();
     }
 }
 
 export const updateItemStatusHandler = async (req, res, next) => {
-    const tenantId = req.context.tenantId;
-
     const itemIdObject = req.params;
     const itemId = itemIdObject.itemId;
     const status = req.body.status;
 
-    const client = await pool.connect();
 
     try {
-        const updatedItem = await itemService.updateItemStatus(client, tenantId, itemId, status);
-        return res.status(200).json(updatedItem);
+        const updatedItem = await withTenant(req, async (client) => {
+            return itemService.updateItemStatus(client, itemId, status);
+        });
+        return res.status(201).json(updatedItem);
     } catch (err) {
         next(err);
-    } finally {
-        client.release();
     }
 }
