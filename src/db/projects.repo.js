@@ -1,35 +1,35 @@
-export async function insertProject(client, tenantId, name) {
+export async function insertProject(client, name) {
     return client.query(
         `
             INSERT INTO projects (tenant_id, name)
-            VALUES ($1, $2) RETURNING id, tenant_id, name, created_at
+            VALUES (current_setting('app.current_tenant')::uuid, $1)
+                RETURNING id, tenant_id, name, created_at
         `,
-        [tenantId, name]
+        [name]
     );
 }
 
-export async function getProjectsByTenant(client, tenantId, limit, offset) {
+export async function getProjects(client, limit, offset) {
     return client.query(
         `
             SELECT id, tenant_id, name, created_at
             FROM projects
-            WHERE tenant_id = $1
             ORDER BY created_at
-                LIMIT $2
-            OFFSET $3
+                LIMIT $1
+            OFFSET $2
         `,
-        [tenantId, limit, offset]
+        [limit, offset]
     );
 }
 
-export async function getProjectById(client, tenantId, projectId) {
+export async function getProjectById(client, projectId) {
     return client.query(
         `
             SELECT id, tenant_id, name, created_at
             FROM projects
-            WHERE tenant_id = $1
-              AND id = $2 LIMIT 1
+            WHERE id = $1
+            LIMIT 1
         `,
-        [tenantId, projectId]
+        [projectId]
     );
 }

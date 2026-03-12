@@ -1,15 +1,12 @@
 import * as projectRepo from '../db/projects.repo.js';
 
-export const createProject = async (client, tenantId, name) => {
-    if (!tenantId)
-        throw new Error("Tenant context missing");
-
+export const createProject = async (client, name) => {
     if (!name || !name.trim())
         throw new Error("Project name is required");
 
     if (name.length > 100)
         throw new Error("Project name too long");
-    const projectResult = await projectRepo.insertProject(client, tenantId, name);
+    const projectResult = await projectRepo.insertProject(client, name);
 
     if (!projectResult.rows.length)
         throw new Error("Project insert failed");
@@ -17,18 +14,16 @@ export const createProject = async (client, tenantId, name) => {
     return {id: project.id, tenantId: project.tenant_id, name: project.name, createdAt: project.created_at,};
 }
 
-export const getProjectsByTenant = async (
+export const getProjects = async (
     client,
-    tenantId,
     limit = 20,
     offset = 0
 ) => {
     const safeLimit = Math.min(Math.max(Number(limit), 1), 100);
     const safeOffset = Math.max(Number(offset), 0);
 
-    const result = await projectRepo.getProjectsByTenant(
+    const result = await projectRepo.getProjects(
         client,
-        tenantId,
         safeLimit,
         safeOffset
     );
@@ -42,8 +37,8 @@ export const getProjectsByTenant = async (
 };
 
 
-export const getProjectById = async (client, tenantId, projectId) => {
-    const result = await projectRepo.getProjectById(client, tenantId, projectId);
+export const getProjectById = async (client, projectId) => {
+    const result = await projectRepo.getProjectById(client, projectId);
     const project = result.rows[0];
     if (!project) {
         return null;
